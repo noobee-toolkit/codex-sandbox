@@ -24,8 +24,10 @@ jobs:
           ROOT="$(dirname "$(dirname "$PY")")"
           mkdir -p bundle
           cp -a "$ROOT" bundle/python
-          uv pip install --python bundle/python/bin/python3.12 --system faster-whisper
-          bundle/python/bin/python3.12 - <<'PY'
+          uv venv /tmp/fwenv --python 3.12
+          uv pip install --python /tmp/fwenv/bin/python faster-whisper
+          cp -a /tmp/fwenv/lib/python3.12/site-packages bundle/site-packages
+          PYTHONPATH="$PWD/bundle/site-packages" bundle/python/bin/python3.12 - <<'PY'
           import faster_whisper, ctranslate2
           print('faster-whisper', faster_whisper.__version__)
           print('ctranslate2', ctranslate2.__version__)
@@ -36,14 +38,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p bundle/model
-          bundle/python/bin/python3.12 - <<'PY'
+          PYTHONPATH="$PWD/bundle/site-packages" bundle/python/bin/python3.12 - <<'PY'
           from huggingface_hub import snapshot_download
           snapshot_download(
               repo_id='Systran/faster-whisper-base.en',
               local_dir='bundle/model',
           )
           PY
-          du -sh bundle bundle/python bundle/model
+          du -sh bundle bundle/python bundle/site-packages bundle/model
 
       - name: Upload portable runtime bundle
         uses: actions/upload-artifact@v4
