@@ -1,0 +1,37 @@
+name: Temporary Speaker Model Ferry
+
+on:
+  push:
+    paths:
+      - '.github/workflows/speaker-model-ferry.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-model:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download SpeechBrain ECAPA speaker model
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet huggingface_hub
+          python - <<'PY'
+          from huggingface_hub import snapshot_download
+          snapshot_download(
+              repo_id='speechbrain/spkrec-ecapa-voxceleb',
+              local_dir='spkrec-ecapa-voxceleb',
+              allow_patterns=['*.ckpt','*.yaml','*.txt','*.py'],
+          )
+          PY
+          find spkrec-ecapa-voxceleb -type f -maxdepth 3 -print
+
+      - name: Upload speaker model artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: speechbrain-ecapa-speaker-model
+          path: spkrec-ecapa-voxceleb
+          retention-days: 1
+          compression-level: 0
