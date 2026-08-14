@@ -24,8 +24,7 @@ jobs:
           ROOT="$(dirname "$(dirname "$PY")")"
           mkdir -p bundle
           cp -a "$ROOT" bundle/python
-          bundle/python/bin/python3.12 -m ensurepip --upgrade
-          bundle/python/bin/python3.12 -m pip install --no-cache-dir faster-whisper
+          uv pip install --python bundle/python/bin/python3.12 --system faster-whisper
           bundle/python/bin/python3.12 - <<'PY'
           import faster_whisper, ctranslate2
           print('faster-whisper', faster_whisper.__version__)
