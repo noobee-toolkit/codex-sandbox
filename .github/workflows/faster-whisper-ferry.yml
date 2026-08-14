@@ -1,0 +1,43 @@
+name: Temporary Faster Whisper Ferry
+
+on:
+  push:
+    paths:
+      - '.github/workflows/faster-whisper-ferry.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Faster Whisper wheels
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p bundle/wheels bundle/model
+          python -m pip download --dest bundle/wheels faster-whisper
+
+      - name: Download Faster Whisper base English model
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet huggingface_hub
+          python - <<'PY'
+          from huggingface_hub import snapshot_download
+          snapshot_download(
+              repo_id='Systran/faster-whisper-base.en',
+              local_dir='bundle/model',
+          )
+          PY
+          du -sh bundle bundle/wheels bundle/model
+
+      - name: Upload runtime bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: faster-whisper-base-en-runtime
+          path: bundle
+          retention-days: 1
+          compression-level: 0
